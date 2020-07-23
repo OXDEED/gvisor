@@ -14,6 +14,7 @@
 
 #include "test/syscalls/linux/socket_ip_tcp_generic.h"
 
+#include <linux/netfilter_ipv4.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <poll.h>
@@ -1048,6 +1049,20 @@ TEST_P(TCPSocketPairTest, TCPResetDuringClose_NoRandomSave) {
   for (int i = 0; i < kThreadCount; i++) {
     instances[i]->Join();
   }
+}
+
+TEST_P(TCPSocketPairTest, OriginalDstErrors) {
+  auto sockets = ASSERT_NO_ERRNO_AND_VALUE(NewSocketPair());
+
+  // Sockets not affected by NAT should fail to find an original destination.
+  struct sockaddr_in sin = {};
+  socklen_t addr_len = 0;
+  EXPECT_THAT(
+      getsockopt(sockets->first_fd(), SOL_IP, SO_ORIGINAL_DST, &sin, &addr_len),
+      SyscallFailsWithErrno(EINVAL));
+  EXPECT_THAT(getsockopt(sockets->second_fd(), SOL_IP, SO_ORIGINAL_DST, &sin,
+                         &addr_len),
+              SyscallFailsWithErrno(EINVAL));
 }
 
 }  // namespace testing
