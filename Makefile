@@ -155,7 +155,7 @@ syscall-tests: syscall-ptrace-tests syscall-kvm-tests syscall-native-tests
 
 %-runtime-tests: load-runtimes_%
 	@$(call submake,install-test-runtime)
-	@$(call submake,test-runtime TARGETS="//test/runtimes:$*")
+	@$(call submake,test-runtime OPTIONS="--test_timeout=10800" TARGETS="//test/runtimes:$*")
 
 do-tests: runsc
 	@$(call submake,run TARGETS="//runsc" ARGS="--rootless do true")
